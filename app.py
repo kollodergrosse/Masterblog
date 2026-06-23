@@ -4,11 +4,15 @@ app = Flask(__name__)
 
 
 def fetch_post_by_id(post_id):
-    with open('data.json', 'r', encoding='utf-8') as file:
-        blog_posts = json.load(file)
+    try:
+        with open('data.json', 'r', encoding='utf-8') as file:
+            blog_posts = json.load(file)
+            post = next((post for post in blog_posts if post['id'] == post_id), None)
 
-        post = next((post for post in blog_posts if post['id'] == post_id), None)
-        return post
+    except FileNotFoundError:
+        post = None
+
+    return post
 
 
 @app.route('/add', methods=['GET', 'POST'])
