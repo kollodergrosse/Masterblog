@@ -10,7 +10,7 @@ def fetch_post_by_id(post_id):
             post = next((post for post in blog_posts if post['id'] == post_id), None)
 
     except FileNotFoundError:
-        post = None
+        return "Blog post not found", 404
 
     return post
 
@@ -21,9 +21,12 @@ def add():
         author = request.form.get('author')
         title = request.form.get('title')
         content = request.form.get('content')
+        try:
+            with open('data.json', 'r', encoding='utf-8') as file:
+                blog_posts = json.load(file)
 
-        with open('data.json', 'r', encoding='utf-8') as file:
-            blog_posts = json.load(file)
+        except FileNotFoundError:
+            return "Data file not found", 404
 
         new_id = blog_posts[-1]['id'] + 1 if blog_posts else 1
 
@@ -46,9 +49,13 @@ def add():
 
 @app.route('/delete/<int:post_id>', methods=['POST'])
 def delete(post_id):
-    with open('data.json', 'r', encoding='utf-8') as file:
-        blog_posts = json.load(file)
-        refreshed_blog_posts = [post for post in blog_posts if post['id'] != post_id]
+    try:
+        with open('data.json', 'r', encoding='utf-8') as file:
+            blog_posts = json.load(file)
+            refreshed_blog_posts = [post for post in blog_posts if post['id'] != post_id]
+
+    except FileNotFoundError:
+        return "Data file not found", 404
 
     with open('data.json', 'w', encoding='utf-8') as file:
         json.dump(refreshed_blog_posts, file, ensure_ascii=False, indent=4)
@@ -79,7 +86,7 @@ def update(post_id):
                 blog_posts = json.load(file)
 
         except (FileNotFoundError, json.JSONDecodeError):
-            blog_posts = []
+            return "Data file not found", 404
 
         blog_posts = [updated_post if post['id'] == post_id else post for post in blog_posts]
 
@@ -93,8 +100,12 @@ def update(post_id):
 
 @app.route('/')
 def index():
-    with open('data.json', 'r', encoding='utf-8') as file:
-        blog_posts = json.load(file)
+    try:
+        with open('data.json', 'r', encoding='utf-8') as file:
+            blog_posts = json.load(file)
+
+    except FileNotFoundError:
+        return "Data file not found", 404
 
     return render_template('index.html', posts=blog_posts)
 
